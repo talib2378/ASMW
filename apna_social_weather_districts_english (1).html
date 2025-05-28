@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>اپنا سوشل میڈیا کا اپنا موسم</title>
+  <style>
+    body { font-family: 'Noto Nastaliq Urdu', serif; background: #eef2f3; color: #222; padding: 20px; }
+    h1 { text-align: center; margin-bottom: 20px; }
+    select, button { font-size: 18px; padding: 8px; margin: 10px 0; width: 100%; max-width: 400px; }
+    .weather-result { background: white; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .forecast { margin-top: 15px; }
+    .forecast-item { background: #f9f9f9; margin: 8px 0; padding: 10px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>اپنا سوشل میڈیا کا اپنا موسم</h1>
+  <label for="city">اپنا ضلع منتخب کریں:</label>
+  <select id="city">
+    <option value="">-- ضلع منتخب کریں --</option>
+    <option value="Lahore">Lahore</option>
+<option value="Faisalabad">Faisalabad</option>
+<option value="Rawalpindi">Rawalpindi</option>
+<option value="Multan">Multan</option>
+<option value="Gujranwala">Gujranwala</option>
+<option value="Sargodha">Sargodha</option>
+<option value="Bahawalpur">Bahawalpur</option>
+<option value="Sahiwal">Sahiwal</option>
+<option value="Sialkot">Sialkot</option>
+<option value="Sheikhupura">Sheikhupura</option>
+<option value="Rahim Yar Khan">Rahim Yar Khan</option>
+<option value="Jhang">Jhang</option>
+<option value="Okara">Okara</option>
+<option value="Kasur">Kasur</option>
+<option value="Chiniot">Chiniot</option>
+<option value="Muzaffargarh">Muzaffargarh</option>
+<option value="Dera Ghazi Khan">Dera Ghazi Khan</option>
+<option value="Pakpattan">Pakpattan</option>
+<option value="Bhakkar">Bhakkar</option>
+<option value="Khushab">Khushab</option>
+<option value="Mandi Bahauddin">Mandi Bahauddin</option>
+<option value="Mianwali">Mianwali</option>
+<option value="Toba Tek Singh">Toba Tek Singh</option>
+<option value="Vehari">Vehari</option>
+<option value="Hafizabad">Hafizabad</option>
+<option value="Nankana Sahib">Nankana Sahib</option>
+<option value="Rajanpur">Rajanpur</option>
+<option value="Layyah">Layyah</option>
+<option value="Lodhran">Lodhran</option>
+<option value="Bahawalnagar">Bahawalnagar</option>
+<option value="Khanewal">Khanewal</option>
+<option value="Jhelum">Jhelum</option>
+<option value="Narowal">Narowal</option>
+<option value="Attock">Attock</option>
+<option value="Gujrat">Gujrat</option>
+<option value="Leh">Leh</option>
+  </select>
+  <button onclick="getWeather()">موسم دیکھیں</button>
+
+  <div id="weather" class="weather-result" style="display:none;">
+    <h2 id="cityName"></h2>
+    <p id="currentWeather"></p>
+    <h3>اگلے 24 گھنٹوں کی پیشگوئی:</h3>
+    <div id="forecast" class="forecast"></div>
+  </div>
+
+<script>
+  const apiKey = '766adf819e02c5d5e20300bf304353f6';
+
+  function convertToUrduDigits(number) {
+    const english = ['0','1','2','3','4','5','6','7','8','9'];
+    const urdu = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+    return number.toString().split('').map(d=>english.includes(d)?urdu[english.indexOf(d)]:d).join('');
+  }
+
+  async function getWeather() {
+    const city = document.getElementById('city').value;
+    if (!city) {
+      alert('براہ کرم اپنا ضلع منتخب کریں');
+      return;
+    }
+    document.getElementById('weather').style.display = 'none';
+    document.getElementById('cityName').textContent = '';
+    document.getElementById('currentWeather').textContent = 'لوڈ ہو رہا ہے...';
+
+    try {
+      let currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city},PK&appid=${apiKey}&units=metric&lang=ur`);
+      let currentData = await currentRes.json();
+      if(currentData.cod !== 200) {
+        alert('ضلع کا موسم حاصل نہیں ہو سکا، دوبارہ کوشش کریں');
+        return;
+      }
+
+      let forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city},PK&appid=${apiKey}&units=metric&lang=ur`);
+      let forecastData = await forecastRes.json();
+
+      document.getElementById('cityName').textContent = city + ' کا موسم';
+      document.getElementById('currentWeather').textContent =
+        `درجہ حرارت: ${convertToUrduDigits(Math.round(currentData.main.temp))} ڈگری، ` +
+        `حالت: ${currentData.weather[0].description}، ` +
+        `ہوا کی رفتار: ${convertToUrduDigits(Math.round(currentData.wind.speed * 3.6))} کلومیٹر فی گھنٹہ`;
+
+      let forecastHtml = '';
+      let count = 0;
+      let now = new Date();
+      for (let item of forecastData.list) {
+        let forecastDate = new Date(item.dt * 1000);
+        let diffHours = (forecastDate - now) / (1000 * 60 * 60);
+        if(diffHours > 0 && diffHours <= 24) {
+          count++;
+          forecastHtml += `
+            <div class="forecast-item">
+              <strong>${forecastDate.toLocaleString('ur-PK', { hour: '2-digit', minute: '2-digit', hour12: true })}</strong><br/>
+              درجہ حرارت: ${convertToUrduDigits(Math.round(item.main.temp))} ڈگری،  
+              حالت: ${item.weather[0].description}،  
+              ہوا کی رفتار: ${convertToUrduDigits(Math.round(item.wind.speed * 3.6))} کلومیٹر فی گھنٹہ
+            </div>
+          `;
+        }
+        if(count >= 8) break;
+      }
+
+      document.getElementById('forecast').innerHTML = forecastHtml;
+      document.getElementById('weather').style.display = 'block';
+
+    } catch (error) {
+      alert('موسم حاصل کرنے میں مسئلہ آیا، دوبارہ کوشش کریں');
+      console.error(error);
+    }
+  }
+</script>
+
+</body>
+</html>
